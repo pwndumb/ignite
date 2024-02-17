@@ -1,0 +1,5 @@
+# Ignorar arquivos .DS_Store específicos do macOS
+.DS_Store
+
+# Ignorar arquivos de configuração do Obsidian
+.obsidian/

@@ -1,0 +1,262 @@
+# custom configurations
+#
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[ -f ~/.completion.zsh ] && source ~/.completion.zsh
+
+# nmap recon all ports
+function nmap-recon(){
+    ports=$(sudo grc nmap -p- --min-rate=1000 $1 | grep '^[0-9]' | cut -d '/' -f1 | tr '\n' ',' | sed s/,$//)  && sudo grc nmap -sC -sV -p$ports $1 -oA nmap-all-$1                                                                               
+}
+
+# extract basic realm auth from proxy
+function proxy-extract-passwords(){
+    tshark -nr $1 -T fields  -e ip.src -e ip.dst -e http.authbasic -Y "http.proxy_authorization" | sort -u | sed -e 's/\s\+/:/g'                                                                                                                  
+}
+
+# tmux alias to save time
+function tmux-htb(){
+    tmux new-session -s $1 -n recon \; \
+        send-keys 'echo Hack The Planet !!!' C-m \; \
+        split-window -v \; \
+        split-window -h \; \
+        send-keys 'ping -c 1 1.1.1.1' C-m \; \
+        new-window -n shells \; \
+        send-keys 'id' C-m \; \
+        split-window -v \; \
+        split-window -h \;
+
+    }
+    
+# create a new tmux windows
+function tmux-new(){
+    tmux new-session -s $1 -n recon \; \
+        send-keys 'echo Hack The Planet !!!' C-m \; \
+        split-window -h \; \
+        split-window -v \; \
+
+    }
+
+# fzf options 
+export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -g ""'
+export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window down:3:hidden:wrap --border"
+export PATH=$PATH:~/.cargo/bin/
+export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
+
+
+# navi keyboard shortcut 
+eval "$(navi widget zsh)"
+
+
+# Aliases
+alias ll='ls -la'
+alias la='ls -A'
+alias l='ls -CF'
+# alias ls='logo-ls'
+alias awae-lab='sudo openvpn ~/awae.ovpn > /dev/null 2>&1 &; sleep 10; zsh'
+alias fund-lab='sudo openvpn ~/fundamentals.ovpn > /dev/null 2>&1 &; sleep 10; zsh'
+alias install-apk='adb install *.apk'
+alias screenshot='adb shell screencap -p > "SS-"`date +"%m-%d%-%H-%M-%S"`".png"'
+alias art-upload='ssh zephy@zephyfoxy.art'
+alias commando='xfreerdp /u:CommandoVM /p:CommandoVM /v:192.168.1.135 /dynamic-resolution'
+
+# enable auto-suggestions based on the history
+if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
+    . /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    # change suggestion color
+    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#999'
+fi
+
+
+# custom configuration
+#
+#
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[ -f ~/.completion.zsh ] && source ~/.completion.zsh
+#
+# custom configurations
+
+fD() {
+    local dir
+    dir=$(find ${1:-.} -path '*/\.*' -prune \
+        -o -type d -print 2> /dev/null | fzf +m) &&
+        cd "$dir"
+    }
+# fh - search in your command history and execute selected command
+fh() {
+    eval $( ([ -n "$ZSH_NAME"  ] && fc -l 1 || history) | fzf +s --tac | sed 's/ *[0-9]* *//' )
+
+}
+
+# https://blog.ropnop.com/docker-for-pentesters/
+# docker alias
+
+function dockershellhere() {
+    dirname=${PWD##*/}
+    docker run --rm -it --entrypoint=/bin/bash -v `pwd`:/${dirname} -p 1337:1337 -w /${dirname} "$@"
+}
+
+function dockershellshhere() {
+    dirname=${PWD##*/}
+    docker run --rm -it --entrypoint=/bin/sh -v `pwd`:/${dirname} -w /${dirname} "$@"
+}
+
+smbservehere() {
+    local sharename
+    [[ -z $1 ]] && sharename="SHARE" || sharename=$1
+    docker run --rm -it -p 445:445 -v "${PWD}:/tmp/serve" rflathers/impacket smbserver.py -smb2support $sharename /tmp/serve                                                                                                                      
+}
+
+webdavhere() {
+
+    docker run --rm -it -p 80:80 -v "${PWD}:/srv/data/share" rflathers/webdav
+
+}
+#  alias rustscan='docker run -it --rm --name rustscan rustscan/rustscan:2.0.0'
+alias dockershellsh="docker run --rm -i -t --entrypoint=/bin/sh"
+alias msfvenomhere='docker run --rm -it -v "${HOME}/.msf4:/home/msf/.msf4" -v "${PWD}:/data" metasploitframework/metasploit-framework ./msfvenom'                                                                                                 
+alias nginxhere='docker run --rm -it -p 80:80 -p 443:443 -v "${PWD}:/srv/data" rflathers/nginxserve'
+alias impacket="docker run --rm -it rflathers/impacket"
+
+# some useful functions
+#
+# nmap nse scripts
+function nmap-nse() {
+    locate -r '\.nse'  | xargs grep categories |  grep  $1
+}
+
+# https://www.youtube.com/channel/UC0ArlFuFYMpEewyRBzdLHiw
+# lookup commands in history (older, I use fzf now)
+hgrip(){
+    history | grep $1
+}
+
+# aws alias (never used)
+#----- AWS -------
+
+s3ls(){
+    aws s3 ls s3://$1
+}
+
+s3cp(){
+    aws s3 cp $2 s3://$1
+}
+
+# domain enumertion useful alias
+
+#----- misc -----
+certspotter(){
+    curl -s https://certspotter.com/api/v0/certs\?domain\=$1 | jq '.[].dns_names[]' | sed 's/\"//g' | sed 's/\*\.//g' | sort -u | grep $1                                                                                                         
+} #h/t Michiel Prins
+
+crtsh(){
+    curl -s https://crt.sh/?q=%.$1  | sed 's/<\/\?[^>]\+>//g' | grep $1
+}
+
+certnmap(){
+    curl https://certspotter.com/api/v0/certs\?domain\=$1 | jq '.[].dns_names[]' | sed 's/\"//g' | sed 's/\*\.//g' | sort -u | grep $1  | nmap -T5 -Pn -sS -i - -$                                                                                
+} #h/t Jobert Abma
+
+certbrute(){
+    cat $1.txt | while read line; do python3 dirsearch.py -e . -u "https://$line"; done
+}
+
+ipinfo(){
+    curl http://ipinfo.io/$1
+}
+
+# just a nc (now is time to use pwncat)
+ncx(){
+    nc -l -n -vv -p $1 -k
+}
+
+# alias and functions I myself created,most of them came from after I read some stuff online
+
+
+# hide ssh from log
+function hide-ssh(){
+    ssh -o UserKnownHostsFile=/dev/null -T $1@$2 -p $3 "bash -i"
+}
+
+# nmap recon all ports
+function nmap-recon(){
+    ports=$(sudo grc nmap -p- --min-rate=1000 $1 | grep '^[0-9]' | cut -d '/' -f1 | tr '\n' ',' | sed s/,$//)  && sudo grc nmap -sC -sV -p$ports $1 -oA nmap-all-$1                                                                               
+}
+# extract basic realm auth from proxy
+function proxy-extract-passwords(){
+    tshark -nr $1 -T fields  -e ip.src -e ip.dst -e http.authbasic -Y "http.proxy_authorization" | sort -u | sed -e 's/\s\+/:/g'                                                                                                                  
+}
+# tmux alias to save time
+function tmux-htb(){
+    tmux new-session -s $1 -n recon \; \
+        send-keys 'echo Hack The Planet !!!' C-m \; \
+        split-window -v \; \
+        split-window -h \; \
+        send-keys 'ping -c 1 1.1.1.1' C-m \; \
+        new-window -n shells \; \
+        send-keys 'id' C-m \; \
+        split-window -v \; \
+        split-window -h \;
+
+    }
+function tmux-new(){
+    tmux new-session -s $1 -n recon \; \
+        send-keys 'echo Hack The Planet !!!' C-m \; \
+        split-window -h \; \
+        split-window -v \; \
+
+    }
+
+alias xclip="xclip -sel clip"
+alias mv="mv -i"
+alias nse='ll /usr/share/nmap/scripts | grep '
+alias msf_start='sudo service postgresql start && sudo  msfconsole'
+alias handler='sudo msfdb start; sudo msfconsole -x "workspace pen300;handler -p windows/x64/meterpreter/reverse_https -H tun0 -P 443"                                                                                                            
+'
+alias nc='rlwrap nc'
+alias vi ='nvim'
+alias vim="nvim"
+alias fu='fuck'
+alias ls='lsd'
+alias f='fzf --preview "bat --color \"always\" {}"'
+alias cat='batcat'
+# some alias copy from https://gist.github.com/chrislee35/0042e3a4a2a3b068c5843d49fe78d9c1
+alias shred="gshred -u -f"
+alias ipsort='sort -nt. -k 1,1 -k 2,2 -k 3,3 -k 4,4'
+alias ipusort='sort -unt. -k 1,1 -k 2,2 -k 3,3 -k 4,4'
+alias rot13='tr "[A-Za-z]" "[N-ZA-Mn-za-m]"'
+alias downcase='tr "[A-Z]" "[a-z]"'
+alias upcase='tr "[a-z]" "[A-Z]"'
+alias base64e='openssl base64 -e'
+alias base64d='openssl base64 -d'
+alias psx='ps auxw|grep'
+alias top='top -o cpu -s 5'
+alias catxclip='cat $1 | xclip'
+alias irb='irb --readline -r irb/completion'
+alias grepip="grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'"
+alias grepipo="grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'"
+alias grep='egrep'
+alias ip='ip -c'
+alias gss='git status'
+alias gss-br='git branch'
+alias gchk='git checkout'
+alias genshell='/home/pwndumb/tools/genshell/genshell'
+alias burp='java -jar -Xmx4g /usr/local/bin/burpsuite_pro_v2022.9.6.jar 2>/dev/null &'
+alias vimdiff='nvim -d'
+
+# searh string in files
+fif() {
+    if [ ! "$#" -gt 0 ]; then
+        echo "Need a string to search for!";
+        return 1;
+    fi
+    rg --files-with-matches --no-messages "$1" | fzf $FZF_PREVIEW_WINDOW --preview "ag --ignore-case --context 10 '$1' {}"                                                                                                                        
+}
+
+export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -g ""'
+export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window down:3:hidden:wrap --border"
+export PATH=$PATH:~/.cargo/bin/
+export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
+
+
+export PATH="$HOME/.poetry/bin:$PATH"
+
