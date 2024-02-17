@@ -42,12 +42,12 @@ then
     BLUE "Install some packages from oficial repositories ..." #&& echo 
     sudo apt-get update && \
 	sudo DEBIAN_FRONTEND=noninteractive apt install -y --assume-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" apt-utils build-essential jq strace ltrace \
-	curl wget rubygems gcc dnsutils netcat kali-desktop-kde \
-	gcc-multilib  net-tools vim gdb gdb-multiarch python python3 python3-pip python3-dev \
+	curl wget rubygems gcc dnsutils ncat kali-desktop-kde \
+	gcc-multilib-x86-64-linux-gnu  net-tools vim gdb gdb-multiarch python3 python3-pip python3-dev \
 	libssl-dev libffi-dev wget git make procps libpcre3-dev libdb-dev libxt-dev libxaw7-dev \
 	python3-pip tmux xclip nodejs npm vim-gtk perl binutils rpm2cpio cpio flameshot \
-	zstd zsh bpython ipython3 p7zip-full tree hexyl sudo npm nodejs radare2 radare2-cutter \
-	fzf neovim seclists bat ghidra
+	zstd zsh bpython  p7zip-full tree hexyl sudo npm nodejs rizin-cutter rizin \
+	fzf neovim seclists bat ghidra cargo golang 
 
     BLUE "Try Install docker ..."
     sudo apt install -y docker.io
@@ -67,6 +67,13 @@ then
 	sudo apt install pipx git
 	pipx ensurepath
 	pipx install git+https://github.com/Pennyw0rth/NetExec	
+
+	BLUE "Install tools from project discovery"
+	sh -c 'go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest'
+	sh -c 'go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest'
+	sh -c 'go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest'
+	sh -c 'go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest'
+	sh -c 'go install github.com/projectdiscovery/cvemap/cmd/cvemap@latest'
 
 else
 
