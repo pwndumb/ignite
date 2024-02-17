@@ -1,183 +1,95 @@
 #!/usr/bin/env bash
+
 ######################################################################
-# @author      : pwndumb (pwndumb@thisistheway)
+# @author      : pwndumb
 # @file        : ignite
 # @created     : Terça Feira Dez 29, 2020 11:11:39 -03
 #
 # @description : ignite script to install all necessary tools for pentest
 ######################################################################
 
-# this came from https://github.com/JohnHammond/ignition_key/blob/master/ignition_key.sh
-# Define colors...
-RED=`tput bold && tput setaf 1`
-GREEN=`tput bold && tput setaf 2`
-YELLOW=`tput bold && tput setaf 3`
-BLUE=`tput bold && tput setaf 4`
-NC=`tput sgr0`
+# Colors
+RED=$(tput bold && tput setaf 1)
+GREEN=$(tput bold && tput setaf 2)
+YELLOW=$(tput bold && tput setaf 3)
+BLUE=$(tput bold && tput setaf 4)
+NC=$(tput sgr0) # No Color
 
-function RED(){
-	echo -e "\n${RED}${1}${NC}"
-}
-function GREEN(){
-	echo -e "\n${GREEN}${1}${NC}"
-}
-function YELLOW(){
-	echo -e "\n${YELLOW}${1}${NC}"
-}
-function BLUE(){
-	echo -e "\n${BLUE}${1}${NC}"
+# Print functions
+print_color() {
+  echo -e "\n$1${2}$NC"
 }
 
-#######################################################
-
-
-GREEN "This script will install necessary tools to do my job in a fresh VM !!!"
-GREEN "The root password will be asked !!!" #&& echo 
-
-# Install packages 
-
-if [ $UID -ne 0 ] 
-then
-
-    BLUE "Install some packages from oficial repositories ..." #&& echo 
-    sudo apt-get update && \
-	sudo apt -y dist-upgrade && \
-	sudo DEBIAN_FRONTEND=noninteractive apt install -y --assume-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" apt-utils build-essential jq strace  \
-	curl wget rubygems gcc dnsutils ncat gcc-multilib-x86-64-linux-gnu   \
-	net-tools vim gdb gdb-multiarch python3 python3-pip python3-dev \
-	libssl-dev libffi-dev wget git make procps libpcre3-dev libdb-dev libxt-dev libxaw7-dev \
-	python3-pip tmux xclip nodejs npm perl binutils rpm2cpio cpio flameshot \
-	zstd zsh bpython  p7zip-full tree hexyl sudo npm nodejs rizin-cutter rizin \
-	fzf neovim seclists bat ghidra cargo golang gitleaks bloodhound code-oss \
-	rlwrap htop btop ncdu ripgrep fd-find
-
-    BLUE "Try Install docker ..."
-    sudo apt install -y docker.io
-    sudo systemctl enable docker --now
-    sudo docker run hello-world
-    BLUE "Puts user in docker group..."
-    sudo usermod -aG docker $USER
-
-    YELLOW "Remove trash..."
-    sudo apt autoremove -y --assume-yes
-
-	BLUE "Install vimplug"
-	sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
-       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-
-	BLUE "Install netexec"
-	sudo apt install pipx git
-	pipx ensurepath
-	pipx install git+https://github.com/Pennyw0rth/NetExec
-	pipx ensurepath
-
-	BLUE "Install tools from project discovery"
-	sh -c 'go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest'
-	sh -c 'go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest'
-	sh -c 'go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest'
-	sh -c 'go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest'
-	sh -c 'go install github.com/projectdiscovery/cvemap/cmd/cvemap@latest'
-
-else
-
-	RED "Not RUN as ROOT, run with user in the sudo group"
-	RED "When ROOT is required , the password will be ask"
-	RED "Running as root, aborting"
-	exit 127
-
+# Check if running as root
+if [ "$(id -u)" -ne 0 ]; then
+  print_color "$RED" "This script should not be run as root. Please run as a regular user with sudo privileges."
+  #exit 1
 fi
 
-if [ $? -eq 0 ]
-then
+print_color "$GREEN" "This script will install necessary tools for pentesting on a fresh VM."
+print_color "$GREEN" "The root password may be required."
 
-	# if first stage complete lets to configuration files
-	BLUE "Installed packages." #&& echo
-	BLUE "Lets install some tools from github"
-	# create toos directory inside home user
-	YELLOW "Create Tools directory inside the home user"
-	mkdir $HOME/Tools && cd $HOME/Tools 
-	
-	# clone and insall some tools in github
-	git clone https://github.com/pwndbg/pwndbg.git && \
-	cd pwndbg && ./setup.sh && \
-	cd .. && \
-	git clone https://github.com/niklasb/libc-database && \
-	cd libc-database &&  \
-	cd .. && git clone https://github.com/JonathanSalwan/ROPgadget  && \
-	sudo gem install one_gadget && sudo pip3 install pwntools && \
-	git clone https://github.com/samoshkin/tmux-config.git && \
-	cd tmux-config && ./install.sh
+# Update and Upgrade
+print_color "$BLUE" "Updating and upgrading system packages..."
+sudo apt-get update && sudo apt-get -y dist-upgrade
 
-	if [ $? -ne 0 ]
-	then
+# Package installation
+print_color "$BLUE" "Installing packages..."
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends apt-utils build-essential jq strace curl wget rubygems gcc dnsutils ncat net-tools vim gdb gdb-multiarch python3 python3-pip python3-dev libssl-dev libffi-dev wget git make procps libpcre3-dev libdb-dev libxt-dev libxaw7-dev python3-pip tmux xclip nodejs npm perl binutils rpm2cpio cpio zstd zsh bpython p7zip-full tree hexyl sudo npm rizin-cutter rizin fzf neovim seclists bat ghidra cargo golang gitleaks bloodhound code-oss rlwrap htop btop ncdu ripgrep fd-find docker.io
 
-		RED "Something wrong, cant clone something in github aborting ..."
-		exit 127
+# Docker configuration
+print_color "$BLUE" "Configuring Docker..."
+sudo systemctl enable docker --now
+sudo usermod -aG docker $USER
+print_color "$BLUE" "Testing Docker installation..."
+sudo docker run hello-world
 
-	fi
-	
-	
-	# install vim plug
-	YELLOW "Installing vim plug"
+# Cleanup
+print_color "$YELLOW" "Cleaning up..."
+sudo apt-get autoremove -y
 
-	sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
-       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+# Tool installations
+print_color "$BLUE" "Installing additional tools..."
 
-	BLUE "Vim-Plug installed"
-	
-	if [ $? -ne 0 ]
-	then
+# NetExec
+print_color "$BLUE" "Installing NetExec..."
+pipx install git+https://github.com/Pennyw0rth/NetExec
 
-		RED "Something wrong, cant install vim-plug aborting ..."
-		exit 127
+# Project Discovery tools
+print_color "$BLUE" "Installing tools from Project Discovery..."
+GOPATH=$HOME/go
+PATH=$PATH:$GOPATH/bin
+export PATH GOPATH
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/projectdiscovery/cvemap/cmd/cvemap@latest
 
-	fi
-	
-	YELLOW "Download NVIM configurations..."
+# GitHub tools and configurations
+print_color "$BLUE" "Cloning and setting up tools from GitHub..."
+mkdir -p $HOME/Tools && cd $HOME/Tools
+git clone https://github.com/pwndbg/pwndbg.git && cd pwndbg && ./setup.sh && cd ..
+git clone https://github.com/niklasb/libc-database
+git clone https://github.com/JonathanSalwan/ROPgadget
+sudo gem install one_gadget
+sudo pip3 install pwntools
 
-	sh -c 'curl -fLo "$HOME/.config/nvim/init.vim" --create-dirs \
-		https://raw.githubusercontent.com/pwndumb/ignite/master/nvim/init.vim'
+# Vim-Plug for Neovim
+print_color "$YELLOW" "Installing Vim-Plug for Neovim..."
+sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 
+# NVIM configurations
+print_color "$YELLOW" "Downloading NVIM configurations..."
+curl -fLo "$HOME/.config/nvim/init.vim" --create-dirs https://raw.githubusercontent.com/pwndumb/ignite/master/nvim/init.vim
 
-	if [ $? -eq 0 ]
-	then
-		
-		BLUE "Installed NVIM configurations files from github repo ..."
-		# install fzf
-		BLUE "Configuring FZF..." 
+# TMUX configurations
+print_color "$YELLOW" "Downloading TMUX configurations..."
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+curl -s -q https://raw.githubusercontent.com/pwndumb/ignite/master/tmux/tmux.conf | tee -a "$HOME/.tmux.conf"
+curl -s -q https://raw.githubusercontent.com/pwndumb/ignite/master/zshrc/zshrc | tee -a "$HOME/.zshrc"
+tmux source-file ~/.tmux.conf
 
-		echo y | $HOME/.fzf/install
-
-	else
-
-		RED "If the command below get some error. Enter in nvim and type :PlugInstall"
-		RED "When the script finish !!!"
-	
-	fi	
-
-	RED "Install ZSH configurations.Pay attention password REQUIRED..."
-	
-	YELLOW "Download TMUX configurations..."
-
-	sh -c 'curl -s -q  https://raw.githubusercontent.com/pwndumb/ignite/master/tmux/tmux.conf | tee -a "$HOME/.tmux.conf"'
-
-	if [ $? -eq 0 ]
-	then
-		
-		BLUE "Installed TMUX configurations files from git repo ..."
-		sh -c 'tmux source-file ~/.tmux.conf'
-
-		
-	else
-
-		RED "Something wrong, cant download tmux.conf from github, aborting ..."
-		exit 127
-
-	fi
+print_color "$GREEN" "Installation and configuration complete. Please restart your session for all changes to take effect."
 
 
-else
-
-	RED "Something is wrong ... aborting the execution"
-	exit 127
-fi
