@@ -67,7 +67,8 @@ then
 	BLUE "Install netexec"
 	sudo apt install pipx git
 	pipx ensurepath
-	pipx install git+https://github.com/Pennyw0rth/NetExec	
+	pipx install git+https://github.com/Pennyw0rth/NetExec
+	pipx ensurepath
 
 	BLUE "Install tools from project discovery"
 	sh -c 'go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest'
