@@ -48,7 +48,7 @@ then
 	libssl-dev libffi-dev wget git make procps libpcre3-dev libdb-dev libxt-dev libxaw7-dev \
 	python3-pip tmux xclip nodejs npm perl binutils rpm2cpio cpio flameshot \
 	zstd zsh bpython  p7zip-full tree hexyl sudo npm nodejs rizin-cutter rizin \
-	fzf neovim seclists bat ghidra cargo golang gitleaks bloodhound 
+	fzf neovim seclists bat ghidra cargo golang gitleaks bloodhound code-oss
 
     BLUE "Try Install docker ..."
     sudo apt install -y docker.io
@@ -137,9 +137,6 @@ then
 	sh -c 'curl -fLo "$HOME/.config/nvim/init.vim" --create-dirs \
 		https://raw.githubusercontent.com/pwndumb/ignite/master/nvim/init.vim'
 
-	# execute command inside nvim and exit
-	echo 'AA' | nvim -c ':PlugInstall|:x!|q!'
-	nvim /etc/os-release -c ':CocInstall coc-python|:x!|x!' 
 
 	if [ $? -eq 0 ]
 	then
