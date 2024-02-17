@@ -48,7 +48,8 @@ then
 	libssl-dev libffi-dev wget git make procps libpcre3-dev libdb-dev libxt-dev libxaw7-dev \
 	python3-pip tmux xclip nodejs npm perl binutils rpm2cpio cpio flameshot \
 	zstd zsh bpython  p7zip-full tree hexyl sudo npm nodejs rizin-cutter rizin \
-	fzf neovim seclists bat ghidra cargo golang gitleaks bloodhound code-oss
+	fzf neovim seclists bat ghidra cargo golang gitleaks bloodhound code-oss \
+	rlwrap htop btop ncdu ripgrep fd-find
 
     BLUE "Try Install docker ..."
     sudo apt install -y docker.io
