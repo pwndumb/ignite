@@ -97,7 +97,7 @@ then
 	mkdir $HOME/Tools && cd $HOME/Tools 
 	
 	# clone and insall some tools in github
-	git clone https://github.com/pwndumb/pwndbg.git && \
+	git clone https://github.com/pwndbg/pwndbg.git && \
 	cd pwndbg && ./setup.sh && \
 	cd .. && \
 	git clone https://github.com/niklasb/libc-database && \
